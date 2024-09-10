@@ -14,19 +14,65 @@
 #include <linux/of.h>
 #include <linux/uio_driver.h>
 
+static irqreturn_t pwm_irqhander(int irq, struct uio_info *dev_info)
+{
+    return IRQ_HANDLED;
+}
+
 static const struct of_device_id sun20i_of_device_ids[] = {
-    { .compatible = "allwinner, sun20i-pwm-uio"},
+    { .compatible = "allwinner,sun20i-pwm-uio" },
     { /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, sun20i_of_device_ids);
 
 static int sun20i_pwm_probe(struct platform_device *pdev)
 {
+    struct uio_info *info;
+    struct resource *res;
+    struct device *dev = &pdev->dev;
+    int irq;
+    int ret;
+
+    info = devm_kzalloc(dev, sizeof(*info), GFP_KERNEL);
+    if(!info)
+        return -ENOMEM;
+
+    res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+    if(unlikely(res == NULL)) {
+        dev_err(dev, "Invalid memory resource!\n");
+        return -EINVAL;
+    }
+
+    irq = platform_get_irq(pdev, 0);
+    if(irq < 0) {
+        dev_err(dev, "Invalid IRQ number\n");
+        return -EINVAL;
+    }
+
+    info->mem[0].addr = res->start;
+    info->mem[0].size = resource_size(res);
+    info->mem[0].memtype = UIO_MEM_PHYS;
+    info->irq = irq;
+    info->name = devm_kasprintf(dev, GFP_KERNEL, "sun20i-pwm");
+    info->version = "1.0.0";
+    info->irq_flags = 0;
+    info->handler = &pwm_irqhander;
+
+    ret = uio_register_device(dev, info);
+    if(ret) {
+        dev_err(dev, "Unable to register UIO device\n");
+        return ret;
+    }
+
+    platform_set_drvdata(pdev, info);
+    
     return 0;
 }
 
 static int sun20i_pwm_remove(struct platform_device *pdev)
 {
+    struct uio_info *info = platform_get_drvdata(pdev);
+    uio_unregister_device(info);
     return 0;
 }
 
