@@ -1,0 +1,7 @@
+.vscode
+*sun20i-pwm-uio.*
+!sun20i-pwm-uio.c
+modules.order
+.modules.order.cmd
+Module.symvers
+.Module.symvers.cmd
