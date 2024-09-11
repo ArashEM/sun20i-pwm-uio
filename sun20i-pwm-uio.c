@@ -12,6 +12,7 @@
 #include <linux/device.h>
 #include <linux/platform_device.h>
 #include <linux/of.h>
+#include <linux/printk.h>
 #include <linux/uio_driver.h>
 
 static irqreturn_t pwm_irqhander(int irq, struct uio_info *dev_info)
@@ -49,12 +50,22 @@ static int sun20i_pwm_probe(struct platform_device *pdev)
         return -EINVAL;
     }
 
-    info->mem[0].addr = res->start;
-    info->mem[0].size = resource_size(res);
+    /* physical address must be page aligned */
+    phys_addr_t addr = res->start & PAGE_MASK;
+
+    /* size must be multiples of page size*/
+    resource_size_t size =
+        ((resource_size(res) >> PAGE_SHIFT) + 1) << PAGE_SHIFT;
+
+    info->mem[0].addr = addr;
+    info->mem[0].size = size;
+    info->mem[0].offs = res->start - addr;
     info->mem[0].memtype = UIO_MEM_PHYS;
-    info->irq = irq;
+
     info->name = devm_kasprintf(dev, GFP_KERNEL, "sun20i-pwm");
     info->version = "1.0.0";
+
+    info->irq = irq;
     info->irq_flags = 0;
     info->handler = &pwm_irqhander;
 
@@ -88,5 +99,5 @@ module_platform_driver(sun20i_pwm_driver);
 
 MODULE_ALIAS("platform:sun20i-pwm-uio");
 MODULE_AUTHOR("Arash Golgol arash.golgol@gmail.com");
-MODULE_DESCRIPTION("Allwinner sun20i PWM driver");
+MODULE_DESCRIPTION("Allwinner sun20i PWM UIO driver");
 MODULE_LICENSE("GPL v2");
