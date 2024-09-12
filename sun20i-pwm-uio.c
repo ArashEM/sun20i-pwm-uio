@@ -12,8 +12,15 @@
 #include <linux/device.h>
 #include <linux/platform_device.h>
 #include <linux/of.h>
-#include <linux/printk.h>
+#include <linux/reset.h>
+#include <linux/clk.h>
 #include <linux/uio_driver.h>
+
+struct sun20i_pwm {
+    struct clk *bus_clk;
+    struct reset_control *rstc;
+    void __iomem *base;
+};
 
 static irqreturn_t pwm_irqhander(int irq, struct uio_info *dev_info)
 {
@@ -30,6 +37,7 @@ static int sun20i_pwm_probe(struct platform_device *pdev)
 {
     struct uio_info *info;
     struct resource *res;
+    struct sun20i_pwm *pwm;
     struct device *dev = &pdev->dev;
     int irq;
     int ret;
@@ -38,16 +46,49 @@ static int sun20i_pwm_probe(struct platform_device *pdev)
     if(!info)
         return -ENOMEM;
 
+    pwm = devm_kzalloc(dev, sizeof(*pwm), GFP_KERNEL);
+    if(!pwm)
+        return -ENOMEM;
+
+    info->priv = pwm;
+
     res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
     if(unlikely(res == NULL)) {
         dev_err(dev, "Invalid memory resource!\n");
         return -EINVAL;
     }
 
+    pwm->base = devm_ioremap_resource(dev, res);
+    if(IS_ERR(pwm->base))
+        return PTR_ERR(pwm->base);
+
+    pwm->bus_clk = devm_clk_get(dev, "bus");
+    if(IS_ERR(pwm->bus_clk))
+        return dev_err_probe(dev, PTR_ERR(pwm->bus_clk), 
+                            "Unable to get bus clock\n");
+
+    pwm->rstc = devm_reset_control_get_shared(dev, NULL);
+    if(IS_ERR(pwm->rstc))
+        return dev_err_probe(dev, PTR_ERR(pwm->rstc), 
+                            "Unable to get reset\n");
+
+    ret = reset_control_deassert(pwm->rstc);
+    if(ret) {
+        dev_err(dev, "Unable to deassert reset: %pe\n", ERR_PTR(ret));
+        return ret;
+    }
+
+    ret = clk_prepare_enable(pwm->bus_clk);
+    if(ret) {
+        dev_err(dev, "Unable to prepare bus clock: %pe\n", ERR_PTR(ret));
+        goto clk_err;
+    }
+
     irq = platform_get_irq(pdev, 0);
     if(irq < 0) {
         dev_err(dev, "Invalid IRQ number\n");
-        return -EINVAL;
+        ret = -ENAVAIL;
+        goto irq_err;
     }
 
     /* size must be multiples of page size*/
@@ -69,16 +110,28 @@ static int sun20i_pwm_probe(struct platform_device *pdev)
     ret = devm_uio_register_device(dev, info);
     if(ret) {
         dev_err(dev, "Unable to register UIO device\n");
-        return ret;
+        goto irq_err;
     }
 
     platform_set_drvdata(pdev, info);
-    
+
     return 0;
+
+irq_err:
+    clk_disable_unprepare(pwm->bus_clk);
+clk_err:
+    reset_control_assert(pwm->rstc);
+    return ret;
 }
 
 static int sun20i_pwm_remove(struct platform_device *pdev)
 {
+    struct uio_info *info = platform_get_drvdata(pdev);
+    struct sun20i_pwm *pwm = info->priv;
+
+    clk_disable_unprepare(pwm->bus_clk);
+    reset_control_assert(pwm->rstc);
+
     return 0;
 }
 
