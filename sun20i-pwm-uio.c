@@ -50,26 +50,23 @@ static int sun20i_pwm_probe(struct platform_device *pdev)
         return -EINVAL;
     }
 
-    /* physical address must be page aligned */
-    phys_addr_t addr = res->start & PAGE_MASK;
-
     /* size must be multiples of page size*/
     resource_size_t size =
         ((resource_size(res) >> PAGE_SHIFT) + 1) << PAGE_SHIFT;
 
-    info->mem[0].addr = addr;
+    info->mem[0].addr = res->start & PAGE_MASK;
+    info->mem[0].offs = res->start & ~PAGE_MASK;
     info->mem[0].size = size;
-    info->mem[0].offs = res->start - addr;
     info->mem[0].memtype = UIO_MEM_PHYS;
 
-    info->name = devm_kasprintf(dev, GFP_KERNEL, "sun20i-pwm");
+    info->name = "sun20i-pwm";
     info->version = "1.0.0";
 
     info->irq = irq;
     info->irq_flags = 0;
     info->handler = &pwm_irqhander;
 
-    ret = uio_register_device(dev, info);
+    ret = devm_uio_register_device(dev, info);
     if(ret) {
         dev_err(dev, "Unable to register UIO device\n");
         return ret;
@@ -82,8 +79,6 @@ static int sun20i_pwm_probe(struct platform_device *pdev)
 
 static int sun20i_pwm_remove(struct platform_device *pdev)
 {
-    struct uio_info *info = platform_get_drvdata(pdev);
-    uio_unregister_device(info);
     return 0;
 }
 
