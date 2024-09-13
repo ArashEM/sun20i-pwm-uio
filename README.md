@@ -50,11 +50,11 @@ We need `pinctrl` to configure _PWM_ pins for this kernel module.
         clocks = <&ccu CLK_BUS_PWM>, <&dcxo>;
         clock-names = "bus", "mod";
         resets = <&ccu RST_BUS_PWM>;
-	    pinctrl-0 = <&pwm2_pe8_pin>, 
-	    			<&pwm3_pe9_pin>,
-	    			<&pwm4_pe10_pin>,
-	    			<&pwm5_pe13_pin>;
-	    pinctrl-names = "default";
+        pinctrl-0 = <&pwm2_pe8_pin>, 
+                    <&pwm3_pe9_pin>,
+                    <&pwm4_pe10_pin>,
+                    <&pwm5_pe13_pin>;
+        pinctrl-names = "default";
     };
 };
 ```
