@@ -23,11 +23,19 @@ int main() {
     //writel(p + PCGR_OFFSET, PWMx_CLK_GATING(3) | PWMx_CLK_BYPASS(3));
     //writel(p + PER_OFFSET, PWMx_EN(3));
 
-    clk_gate(p, 2, true);
+    uint8_t ch = 3;
+    clk_gate(p, ch, true);
+    
     struct pwm_clk clk = {.src = HOSC, .div = DIV_32 };
-    clk_config(p, 2, clk);
-    clk_bypass(p, 2, true);
-    pwm_en(p, 2, true);
+    clk_config(p, ch, clk);
+    
+    pwm_prescaler(p, ch, 49);
+
+    struct pwm_period period = {.entire = 1000 - 1, .act = 700};
+    pwm_period(p, ch, period);
+    pwm_act_state(p, ch, ACT_HIGH);
+
+    pwm_en(p, ch, true);
 
     munmap(p, 4096);
     close(fd);

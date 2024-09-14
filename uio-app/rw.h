@@ -33,12 +33,12 @@ inline void rmwb(void *base, uint8_t index, bool bit)
     if(index > 31)
         return;
 
-    uint32_t tmp = readl(base);
+    uint32_t reg = readl(base);
     if(bit)
-        tmp |= BIT(index);
+        SET_BIT(reg, index);
     else
-        tmp &= ~BIT(index);
-    writel(base, tmp);
+        CLEAR_BIT(reg, index);
+    writel(base, reg);
 }     
 
 #endif // RW_H

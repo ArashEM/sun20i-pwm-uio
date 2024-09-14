@@ -39,6 +39,7 @@
 // PWM Clock Configuration Register details
 #define PWM_CLK_SRC_SEL         0x07
 #define PCCRxy_OFFSET(ch)       (PCCR01_OFFSET + 0x04 *(ch > 1))
+#define PCCRxy_VALUE(src, div)  ( ((src) << PWM_CLK_SRC_SEL) | (div) )
 
 // PWM Clock Gating Register details
 #define PWMx_CLK_BYPASS(x)      ((x) + 16)
@@ -46,5 +47,22 @@
 
 // PWM Enable Register details
 #define PWMx_EN(x)              (x)
+
+// PWM Control Register
+#define PWM_ACT_STA             0x08
+#define PWM_PRESCAL_K_MASK      0xFF
+#define SET_PWM_PRESCALE(x, pre)    \
+do {                                \
+    (x) &= ~PWM_PRESCAL_K_MASK;     \
+    (x) |= pre;                     \
+} while(0)
+
+// PWM Period Register
+#define PWM_ENTIRE_CYCLE        0x10
+#define SET_PWM_PERIOD(x, ent, act) \
+do {                                \
+    (x) = (act);                    \
+    (x) |= ((ent) << PWM_ENTIRE_CYCLE); \
+} while(0)
 
 #endif // REGISTERS_H

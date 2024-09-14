@@ -5,16 +5,12 @@
  * 
  */
 #include <errno.h>
+#include <stdint.h>
 #include <stdbool.h>
 
 #include "pwm_types.h"
 #include "registers.h"
 #include "rw.h"
-
-inline int32_t check_ch(uint8_t ch) 
-{
-    return (ch < 8) ? 0 : -EINVAL;
-}
 
 /**
  * @brief Pass / Mask PWM clock
@@ -73,20 +69,84 @@ inline int32_t pwm_en(void *base, uint8_t ch, bool en)
 /**
  * @brief Configure PWM clock 
  * 
- * @param base 
- * @param ch 
- * @param config 
- * @return int32_t
+ * @param base Base address of PWM peripheral
+ * @param ch Channel index [0, 7] 
+ * @param clk Clock configuration (Source and Divider)
+ * @return int32_t 0 on success
  * @note It's shared between (c) and (ch + 1). Please check reference manual
  */
-inline int32_t clk_config(void *base, uint8_t ch, struct pwm_clk config)
+inline int32_t clk_config(void *base, uint8_t ch, struct pwm_clk clk)
 {
     if(check_ch(ch))
         return -EINVAL;
 
-    uint32_t tmp = (config.src << PWM_CLK_SRC_SEL) | config.div;
-    writel(base + PCCRxy_OFFSET(ch), tmp);
+    if(check_clk(clk))
+        return -EINVAL;
+
+    writel(base + PCCRxy_OFFSET(ch), PCCRxy_VALUE(clk.src, clk.div));
     
+    return 0;
+}
+
+/**
+ * @brief Set PWM pre scaler
+ * 
+ * @param base Base address of PWM peripheral
+ * @param ch Channel index [0, 7] 
+ * @param pre Clock pre scaler
+ * @return int32_t 0 on success
+ */
+inline int32_t pwm_prescaler(void *base, uint8_t ch, uint8_t pre)
+{
+    if(check_ch(ch))
+        return -EINVAL;
+
+    uint32_t reg = readl(base + PWM_REG_OFFSET(PCR_OFFSET, ch));
+    SET_PWM_PRESCALE(reg, pre);
+    writel(base + PWM_REG_OFFSET(PCR_OFFSET, ch), reg);
+
+    return 0;
+}
+
+/**
+ * @brief Set PWM period (entire, act) value
+ * 
+ * @param base Base address of PWM peripheral
+ * @param ch Channel index [0, 7]
+ * @param period Entire and Active cycles
+ * @return int32_t 0 on success
+ */
+inline int32_t pwm_period(void *base, uint8_t ch, struct pwm_period period)
+{
+    if(check_ch(ch))
+        return -EINVAL;
+    
+    if(check_period(period))
+        return -EINVAL;
+
+    uint32_t p = 0;
+    SET_PWM_PERIOD(p, period.entire, period.act);
+    writel(base + PWM_REG_OFFSET(PPR_OFFSET, ch), p);
+
+    return 0;
+}
+
+/**
+ * @brief Configure PWM active state (low/high)
+ * 
+ * @param p 
+ * @param ch 
+ * @param state 
+ * @return int32_t 
+ */
+inline int32_t pwm_act_state(void *p, uint8_t ch, enum act_state state)
+{
+    if(check_ch(ch))
+        return -EINVAL;
+
+    void *addr = p + PWM_REG_OFFSET(PCR_OFFSET, ch);
+    rmwb(addr, PWM_ACT_STA, to_act_state(state));
+
     return 0;
 }
 
