@@ -5,8 +5,6 @@
  * @note Check t113-s3_user_manual_v1.3_.pdf for more information
  */
 
-#include "bitops.h"
-
 #define PIER_OFFSET         0x0000 // PWM IRQ Enable Register
 #define PISR_OFFSET         0x0004 // PWM IRQ Status Register
 #define CIER_OFFSET         0x0010 // Capture IRQ Enable Register
@@ -64,5 +62,29 @@ do {                                \
     (x) = (act);                    \
     (x) |= ((ent) << PWM_ENTIRE_CYCLE); \
 } while(0)
+#define GET_PWM_ACT(x)          ( (x) & 0x0000FFFF)
+#define GET_PWM_ENTIRE(x)       (((x) & 0xFFFF0000) >> PWM_ENTIRE_CYCLE)
+
+// PWM Capture IRQ Enable Register 
+#define CFIEx(x)                ( 2 * (x) + 1 )
+#define CRIEx(x)                ( 2 * (x) )
+
+// PWM Capture IRQ Status Register
+#define CFISx(x)                ( 2 * (x) + 1 )
+#define CRISx(x)                ( 2 * (x) )
+
+// Capture Enable Register
+#define CAPx_EN(x)              (x)
+
+// Capture Control Register 
+#define CRLF                    0x04
+#define CFLF                    0x03
+#define CRTE                    0x02
+#define CFTE                    0x01
+#define CAPINV                  0x00
+
+//  PWM Capture Rise Lock Register
+#define CRLR(x)                 ( (x) & 0xFFFF )
+#define CFLR(x)                 ( (x) & 0xFFFF )
 
 #endif // REGISTERS_H

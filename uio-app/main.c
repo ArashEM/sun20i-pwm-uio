@@ -28,14 +28,22 @@ int main() {
     
     struct pwm_clk clk = {.src = HOSC, .div = DIV_32 };
     clk_config(p, ch, clk);
-    
-    pwm_prescaler(p, ch, 49);
-
-    struct pwm_period period = {.entire = 1000 - 1, .act = 700};
-    pwm_period(p, ch, period);
-    pwm_act_state(p, ch, ACT_HIGH);
+    struct pwm_period prd = {.entire = 1000 - 1, .act = 151};
+    set_period(p, ch, prd);
+    set_prescaler(p, ch, 49);
+    set_act_state(p, ch, ACT_HIGH);
 
     pwm_en(p, ch, true);
+
+    size_t i = 0;
+    bool en = true;
+    while( i < 20) {
+        sleep(1);
+        en = !en;
+        pwm_en(p, ch, en);
+        ++i;
+        printf("i: %d, en: %x\n", i, en);
+    }
 
     munmap(p, 4096);
     close(fd);

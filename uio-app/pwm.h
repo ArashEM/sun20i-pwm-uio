@@ -49,17 +49,46 @@ inline int32_t clk_bypass(void *base, uint8_t ch, bool bypass)
 }
 
 /**
+ * @brief Check if PWM channel is enabled
+ * 
+ * @param base 
+ * @param ch 
+ * @param en 
+ * @return int32_t 
+ */
+inline int32_t is_pwm_en(void *base, uint8_t ch, bool *en)
+{
+    if(check_ch(ch))
+        return -EINVAL;
+    
+    if(!en)
+        return -EFAULT;
+
+    uint32_t reg = readl(base + PER_OFFSET);
+    *en = IS_SET(reg, PWMx_EN(ch));
+
+    return 0;
+}
+
+/**
  * @brief Enable PWM channel
  * 
  * @param base Base address of PWM peripheral
  * @param ch Channel index [0, 7]
  * @param en true: Enable PWM, false: Disable PWM
  * @return int32_t 0 on success 
+ * @note In case disabling channel, this method block until current cycle finish
  */
 inline int32_t pwm_en(void *base, uint8_t ch, bool en)
 {
     if(check_ch(ch))
         return -EINVAL;
+    /* when disabling, wait for current cycle to end */
+    if(!en) {
+        bool cur;
+        is_pwm_en(base, ch, &cur);
+        while(cur & readl(base + PWM_REG_OFFSET(PPCNTR_OFFSET, ch)));
+    }
 
     rmwb(base + PER_OFFSET, PWMx_EN(ch), en);
 
@@ -96,7 +125,7 @@ inline int32_t clk_config(void *base, uint8_t ch, struct pwm_clk clk)
  * @param pre Clock pre scaler
  * @return int32_t 0 on success
  */
-inline int32_t pwm_prescaler(void *base, uint8_t ch, uint8_t pre)
+inline int32_t set_prescaler(void *base, uint8_t ch, uint8_t pre)
 {
     if(check_ch(ch))
         return -EINVAL;
@@ -116,7 +145,7 @@ inline int32_t pwm_prescaler(void *base, uint8_t ch, uint8_t pre)
  * @param period Entire and Active cycles
  * @return int32_t 0 on success
  */
-inline int32_t pwm_period(void *base, uint8_t ch, struct pwm_period period)
+inline int32_t set_period(void *base, uint8_t ch, struct pwm_period period)
 {
     if(check_ch(ch))
         return -EINVAL;
@@ -132,14 +161,38 @@ inline int32_t pwm_period(void *base, uint8_t ch, struct pwm_period period)
 }
 
 /**
+ * @brief Report current Entire/Active cycles of PWM channel
+ * 
+ * @param base Base address of PWM peripheral
+ * @param ch Channel index [0, 7]
+ * @param period Entire and Active cycles
+ * @return int32_t 0 on success
+ */
+inline int32_t get_period(void *base, uint8_t ch, struct pwm_period *period)
+{
+    if(check_ch(ch))
+        return -EINVAL;
+
+    if(!period)
+        return -EFAULT;
+
+    uint32_t reg = readl(base + PWM_REG_OFFSET(PPR_OFFSET, ch));
+
+    period->act = GET_PWM_ACT(reg);
+    period->entire = GET_PWM_ENTIRE(reg);
+
+    return 0;
+}
+
+/**
  * @brief Configure PWM active state (low/high)
  * 
- * @param p 
- * @param ch 
- * @param state 
- * @return int32_t 
+ * @param base Base address of PWM peripheral
+ * @param ch Channel index [0, 7]
+ * @param state Active high / low state
+ * @return int32_t 0 on success
  */
-inline int32_t pwm_act_state(void *p, uint8_t ch, enum act_state state)
+inline int32_t set_act_state(void *p, uint8_t ch, enum act_state state)
 {
     if(check_ch(ch))
         return -EINVAL;
@@ -150,5 +203,43 @@ inline int32_t pwm_act_state(void *p, uint8_t ch, enum act_state state)
     return 0;
 }
 
+/**
+ * @brief Enable / Disable Capture interrupt
+ * 
+ * @param base Base address of PWM peripheral
+ * @param ch Channel index [0, 7] 
+ * @param irq true: Interrupt on rising and falling edge detection
+ * @return int32_t 
+ */
+inline int32_t set_cap_irq(void *p, uint8_t ch, bool irq)
+{
+    if(check_ch(ch))
+        return -EINVAL;
+
+    rmwb(p + CIER_OFFSET, CRIEx(ch) | CFIEx(ch), irq);
+
+    return 0;
+}
+
+/**
+ * @brief Enable / Disable capture mode
+ * 
+ * @param p 
+ * @param ch 
+ * @param en 
+ * @return int32_t 
+ */
+inline int32_t cap_en(void *p, uint8_t ch, bool en)
+{
+    if(check_ch(ch))
+        return -EINVAL;
+
+    rmwb(p + CER_OFFSET, CAPx_EN(ch), en);
+
+    /* enable capture mode */
+    rmwb(p + CIER_OFFSET, CFIEx(ch) | CRIEx(ch), en);
+
+    return 0;
+}
 
 #endif // PWM_H
