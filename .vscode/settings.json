@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "module.h": "c",
+        "uio_driver.h": "c",
+        "device.h": "c",
+        "unistd.h": "c"
+    }
+}
