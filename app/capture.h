@@ -14,7 +14,7 @@
 
 #include "soc.h"
 #include "clk.h"
-#include "registers.h"
+#include "registers.h" 
 
 /**
  * @brief Enable / Disable Capture interrupt
@@ -150,6 +150,51 @@ inline int32_t cap_falling_lock(void *p, uint8_t ch, uint16_t *flock)
 
     uint32_t reg = readl(p + PWM_REG_OFFSET(CFLR_OFFSET, ch));
     *flock = CFLR(reg);
+
+    return 0;
+}
+
+/**
+ * @brief Report capture rise lock flag (from CCR)
+ * 
+ * @param p 
+ * @param ch 
+ * @param crlf Capture Rise Lock Flag
+ * @return int32_t 0 on success
+ * @note This API do not need interrupt to be enabled
+ */
+inline int32_t cap_crlf(void *p, uint8_t ch, bool *crlf)
+{
+    if(check_ch(ch))
+        return -EINVAL;
+
+    if(!crlf)
+        return -EFAULT;
+
+    uint32_t reg = readl(p + PWM_REG_OFFSET(CCR_OFFSET, ch));
+    *crlf = IS_SET(reg, CRLF);
+
+    return 0;
+}
+
+/**
+ * @brief Report capture fall lock flag
+ * 
+ * @param p 
+ * @param ch 
+ * @param cflf Capture Fall Lock Flag
+ * @return int32_t 0 on success
+ */
+inline int32_t cap_cflf(void *p, uint8_t ch, bool *cflf)
+{
+    if(check_ch(ch))
+        return -EINVAL;
+
+    if(!cflf)
+        return -EFAULT;
+
+    uint32_t reg = readl(p + PWM_REG_OFFSET(CCR_OFFSET, ch));
+    *cflf = IS_SET(reg, CFLF);
 
     return 0;
 }

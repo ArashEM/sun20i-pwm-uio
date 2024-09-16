@@ -21,7 +21,7 @@ int main() {
     clk_gate(p, ch, true);
     struct pwm_clk clk = {.src = HOSC, .div = DIV_32 };
     clk_config(p, ch, clk);
-    struct pwm_period prd = {.entire = 1000 - 1, .act = 151};
+    struct pwm_period prd = {.entire = 1200 - 1, .act = 730};
     set_period(p, ch, prd);
     set_prescaler(p, ch, 49);
     set_act_state(p, ch, ACT_HIGH);
@@ -30,16 +30,39 @@ int main() {
     // Ch 3 as Capture rising edge only
     ch = 3;
     clk_gate(p, ch, true);
-    clk.div = DIV_2;
-    clk_config(p, ch, clk);
-    set_prescaler(p, ch, 49);
-    cap_en(p, ch, true, false);
+    set_prescaler(p, ch, 4);
+    cap_en(p, ch, true, true);
+    // clear_cap_irq(p, ch, true, true);
 
-    size_t i = 0;
-    while( i < 10 ) {
-        
-        sleep(1);
+    bool loop = true;
+    while( loop ) {
+        // uint32_t tmp = readl(p + PWM_REG_OFFSET(CCR_OFFSET, ch));
+        // printf("ccr: 0x%x\n", tmp);
+        // uint16_t lock;
+        // cap_rising_lock(p, ch, &lock);
+        // printf("crlr: %d\n", lock);
+        // cap_falling_lock(p, ch, &lock);
+        // printf("cflr: %d\n", lock);
+        // clear_cap_irq(p, ch, true, true);
+        // sleep(1);
+        bool cflf;
+        cap_cflf(p, ch, &cflf);
+
+        bool crlf;
+        cap_crlf(p, ch, &crlf);
+
+        if(crlf & cflf) {
+            uint16_t lock;
+            cap_rising_lock(p, ch, &lock);
+            printf("crlr: %d\n", lock);
+            cap_falling_lock(p, ch, &lock);
+            printf("cflr: %d\n", lock);
+            clear_cap_irq(p, ch, true, true);
+            loop = false;
+        }
+        usleep(1000*1000);
     }
+    cap_en(p, ch, false, false);
 
 
     munmap(p, 4096);
