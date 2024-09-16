@@ -5,7 +5,9 @@
 #include <sys/types.h>
 #include <errno.h>
 
+#include "clk.h"
 #include "pwm.h"
+#include "capture.h"
 
 int main() {
     int fd = open("/dev/uio0", O_RDWR);
