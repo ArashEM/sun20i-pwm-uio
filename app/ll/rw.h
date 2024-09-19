@@ -7,19 +7,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "bitops.h"
+void writel(void* base, uint32_t value);
 
-inline void writel(void* base, uint32_t value)
-{
-    uint32_t *reg = (uint32_t *)base;
-    *reg = value;
-}
-
-inline uint32_t readl(void* base)
-{
-    uint32_t *reg = (uint32_t *)base;
-    return *reg;
-}
+uint32_t readl(void* base);
 
 /**
  * @brief Read, Modify and Write single bit in 32bit
@@ -28,17 +18,6 @@ inline uint32_t readl(void* base)
  * @param index Index of bit [0, 31]
  * @param bit Desired value of target bit
  */
-inline void rmwb(void *base, uint8_t index, bool bit)
-{
-    if(index > 31)
-        return;
-
-    uint32_t reg = readl(base);
-    if(bit)
-        SET_BIT(reg, index);
-    else
-        CLEAR_BIT(reg, index);
-    writel(base, reg);
-}     
+void rmwb(void *base, uint8_t index, bool bit);   
 
 #endif // RW_H

@@ -3,6 +3,8 @@
         "module.h": "c",
         "uio_driver.h": "c",
         "device.h": "c",
-        "unistd.h": "c"
+        "unistd.h": "c",
+        "clk.h": "c",
+        "bitops.h": "c"
     }
 }

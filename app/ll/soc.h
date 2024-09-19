@@ -11,8 +11,6 @@
  * 
  */
 #include <stdint.h>
-#include <stdbool.h>
-#include <errno.h>
 
 #define HOSC_FREQ       24000000        // Main clock frequency (Hz)
 #define APB0_FREQ       100000000       // APB0 bus clock frequency (Hz)
@@ -25,9 +23,6 @@
  * @param ch 
  * @return int32_t 0 on success
  */
-inline int32_t check_ch(uint8_t ch) 
-{
-    return (ch < PWM_CHANNEL) ? 0 : -EINVAL;
-}
+int32_t check_ch(uint8_t ch);
 
 #endif // SOC_H
