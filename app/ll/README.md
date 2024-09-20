@@ -6,7 +6,7 @@ NOTE: This APIs may have conflict with each other (e.g `pwm` and `capture`). Use
 
 # Files 
 1. `capture.h`: Capture mode configuration. This APIs can conflict with PWM APIs
-1. `pwm`: PWM mode configuration. This APIs can conflict with Capture APIs
+1. `pwm.h`: PWM mode configuration. This APIs can conflict with Capture APIs
 1. `bitops.h`: Bit operations helper macros
 1. `clk.h`: Clock configuration APIs
 1. `register.h`: Register index and masks

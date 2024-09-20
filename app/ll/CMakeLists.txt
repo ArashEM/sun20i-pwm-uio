@@ -1,12 +1,12 @@
 set(LIBRARY_NAME ll)
 set(LIBRARY_SOURCES 
-    capture.c
-    clk.c
-    pwm.c
-    rw.c
-    soc.c
+    src/capture.c
+    src/clk.c
+    src/pwm.c
+    src/rw.c
+    src/soc.c
 )
 
 add_library(${LIBRARY_NAME} STATIC ${LIBRARY_SOURCES})
 target_compile_options(${LIBRARY_NAME} PRIVATE -Wall -Wextra)
-target_include_directories(${LIBRARY_NAME} PUBLIC .)
+target_include_directories(${LIBRARY_NAME} PUBLIC inc)

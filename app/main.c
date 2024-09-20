@@ -5,9 +5,9 @@
 #include <sys/types.h>
 #include <errno.h>
 
-#include "ll/clk.h"
-#include "ll/pwm.h"
-#include "ll/capture.h"
+#include "clk.h"
+#include "pwm.h"
+#include "capture.h"
 
 int main() {
     int fd = open("/dev/uio0", O_RDWR);
@@ -16,23 +16,25 @@ int main() {
     p += 0xc00;
 
 
-    // Ch 2 as PWM generator 
-    uint8_t ch = 2;
+    // Ch 3 as PWM generator 
+    uint8_t ch = 3;
     clk_gate(p, ch, true);
-    struct pwm_clk clk = {.src = HOSC, .div = DIV_32 };
+    struct pwm_clk clk = {.src = HOSC, .div = DIV_16 };
     clk_config(p, ch, clk);
-    struct pwm_period prd = {.entire = 1200 - 1, .act = 730};
+    struct pwm_period prd = {.entire = 1500 - 1, .act = 1200};
     set_period(p, ch, prd);
-    set_prescaler(p, ch, 49);
+    set_prescaler(p, ch, 0);
     set_act_state(p, ch, ACT_HIGH);
     pwm_en(p, ch, true);
 
-    // Ch 3 as Capture rising edge only
-    ch = 3;
+    // Ch 5 as Capture
+    ch = 5;
     clk_gate(p, ch, true);
-    set_prescaler(p, ch, 4);
+    clk.div = DIV_8;
+    clk_config(p, ch, clk);
+    set_prescaler(p, ch, 2);
     cap_en(p, ch, true, true);
-    // clear_cap_irq(p, ch, true, true);
+    clear_cap_irq(p, ch, true, true);
 
     bool loop = true;
     while( loop ) {
@@ -60,7 +62,7 @@ int main() {
             clear_cap_irq(p, ch, true, true);
             loop = false;
         }
-        usleep(1000*1000);
+        usleep(1000*100);
     }
     cap_en(p, ch, false, false);
 

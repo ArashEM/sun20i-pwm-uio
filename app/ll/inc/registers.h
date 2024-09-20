@@ -36,7 +36,7 @@
 
 // PWM Clock Configuration Register details
 #define PWM_CLK_SRC_SEL         0x07
-#define PCCRxy_OFFSET(ch)       (PCCR01_OFFSET + 0x04 *(ch > 1))
+#define PCCRxy_OFFSET(ch)       (PCCR01_OFFSET + 0x04 * ((ch) / 2) )
 #define PCCRxy_VALUE(src, div)  ( ((src) << PWM_CLK_SRC_SEL) | (div) )
 
 // PWM Clock Gating Register details
