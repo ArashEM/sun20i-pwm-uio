@@ -6,6 +6,7 @@ set(TARGET_NAME ${PROJECT_NAME})
 add_executable(${TARGET_NAME} main.c)
 
 add_subdirectory(ll)
+add_subdirectory(uio)
 
-target_link_libraries(${TARGET_NAME} PRIVATE ll)
+target_link_libraries(${TARGET_NAME} PRIVATE ll uio)
 target_compile_options(${TARGET_NAME} PRIVATE -Wall -Wextra)
