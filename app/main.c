@@ -8,6 +8,7 @@
 #include "clk.h"
 #include "pwm.h"
 #include "capture.h"
+#include "config.h"
 
 int main() {
     int fd = open("/dev/uio0", O_RDWR);
@@ -16,6 +17,16 @@ int main() {
     p += 0xc00;
 
 
+    struct pwm_config config = {
+        .clk = {.src = APB0, .div = DIV_8},
+        .period = {.entire = 12500 - 1, .act = 0},
+        .pre = 0,
+        .state = ACT_HIGH,
+        .en = true,
+    };
+    set_pwm_config(p, 4, &config);
+
+#if 0
     // Ch 3 as PWM generator 
     uint8_t ch = 3;
     clk_gate(p, ch, true);
@@ -65,7 +76,7 @@ int main() {
         usleep(1000*100);
     }
     cap_en(p, ch, false, false);
-
+#endif
 
     munmap(p, 4096);
     close(fd);
