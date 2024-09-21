@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include "clk.h"
 #include "pwm.h"
+#include "capture.h"
 
 /**
  * @brief Overall configuration of PWM channel
@@ -25,6 +26,28 @@ struct pwm_config
     struct pwm_period period;   // period and duty cycle
     enum act_state state;       // active high/low
     bool en;                    // channel enable / disable
+};
+
+/**
+ * @brief Overall configuration of capture channel
+ * 
+ */
+struct cap_config
+{
+    struct pwm_clk clk;         // clock source and divider
+    uint8_t pre;                // pre-scaler
+    bool rising;                // capture rising edge
+    bool falling;               // capture falling edge
+};
+
+/**
+ * @brief Report capture result in number of cycles
+ * 
+ */
+struct cap_result_raw
+{
+    uint16_t on_cycles;
+    uint16_t off_cycles;
 };
 
 /**
@@ -67,5 +90,25 @@ int32_t set_pwm_config(void *p, uint8_t ch, const struct pwm_config *config);
  * @return int32_t 0 on success
  */
 int32_t set_pwm_duty(void *p, uint8_t ch, uint8_t duty);
+
+/**
+ * @brief Apply Capture configuration in it's registers
+ * 
+ * @param p Pointer to PWM base address
+ * @param ch PWM channel (0 to 7) 
+ * @param config Pointer to configuration
+ * @return int32_t 0 on success
+ */
+int32_t set_cap_config(void *p, uint8_t ch, const struct cap_config *config);
+
+/**
+ * @brief Capture on/off cycles of input pules in blocking mode
+ * 
+ * @param p Pointer to PWM base address
+ * @param ch PWM channel (0 to 7)  
+ * @param result Number of cycles of on and off
+ * @return int32_t 0 on success
+ */
+int32_t cap_blocking(void *p, uint8_t ch, struct cap_result_raw *result);
 
 #endif // CONFIG_H

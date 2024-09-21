@@ -42,6 +42,8 @@ int32_t set_pwm_config(void *p, uint8_t ch, const struct pwm_config *config)
     if(!config)
         return -EFAULT;
 
+    // ToDo: Check if capture mode is enabled or not!
+
     /**
      * @brief In case of disable, we need clock to be gated after
      *        PWM cycle is finished! So we disable it at the end
@@ -101,4 +103,70 @@ int32_t set_pwm_duty(void *p, uint8_t ch, uint8_t duty)
     ret = set_period(p, ch, period);
     
     return ret;
+}
+
+int32_t set_cap_config(void *p, uint8_t ch, const struct cap_config *config)
+{
+    int32_t ret;
+
+    if(!config)
+        return -EFAULT;
+
+    // Don't touch if PWM is enabled
+    bool pwm = false;
+    ret = is_pwm_en(p, ch, &pwm);
+    if(ret)
+        return ret;
+
+    if(pwm)
+        return -EBUSY;
+
+    ret = clk_gate(p, ch, config->rising & config->falling);
+    if(ret)
+        return ret;
+
+    ret = clk_config(p, ch, config->clk);
+    if(ret)
+        return ret;
+
+    ret = set_prescaler(p, ch, config->pre);
+    if(ret)
+        return ret;
+
+    ret = cap_en(p, ch, config->rising, config->falling);
+    if(ret)
+        return ret;
+
+    ret = clear_cap_irq(p, ch, true, true);
+    if(ret)
+        return ret;
+
+    return 0;
+}
+
+int32_t cap_blocking(void *p, uint8_t ch, struct cap_result_raw *result)
+{
+    int32_t ret;
+
+    if(!result)
+        return -EFAULT;
+
+    bool loop = true;
+    while( loop ) {
+        bool cflf;
+        cap_cflf(p, ch, &cflf);
+
+        bool crlf;
+        cap_crlf(p, ch, &crlf);
+
+        if(crlf & cflf) {
+            cap_rising_lock(p, ch, &result->off_cycles);
+            cap_falling_lock(p, ch, &result->on_cycles);
+            clear_cap_irq(p, ch, true, true);
+            loop = false;
+        }
+        usleep(1000*100);
+    }
+
+    return 0;
 }
