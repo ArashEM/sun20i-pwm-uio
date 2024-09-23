@@ -79,6 +79,16 @@ int32_t clk_gate(void *base, uint8_t ch, bool pass);
 int32_t clk_config(void *base, uint8_t ch, struct pwm_clk clk);
 
 /**
+ * @brief Report current clock configuration
+ * 
+ * @param base Base address of PWM peripheral
+ * @param ch Channel index [0, 7]  
+ * @param clk Pointer clock configuration to be filled
+ * @return int32_t 0 on success
+ */
+int32_t get_clk_config(void *base, uint8_t ch, struct pwm_clk *clk);
+
+/**
  * @brief Set PWM/Capture pre scaler
  * 
  * @param base Base address of PWM peripheral
@@ -87,6 +97,16 @@ int32_t clk_config(void *base, uint8_t ch, struct pwm_clk clk);
  * @return int32_t 0 on success
  */
 int32_t set_prescaler(void *base, uint8_t ch, uint8_t pre);
+
+/**
+ * @brief Report current value of pre-scaler
+ * 
+ * @param base Base address of PWM peripheral
+ * @param ch Channel index [0, 7]  
+ * @param pre Pre scaler value to be filled
+ * @return int32_t 0 on success
+ */
+int32_t get_prescaler(void *base, uint8_t ch, uint8_t *pre);
 
 
 #endif // CLK_H

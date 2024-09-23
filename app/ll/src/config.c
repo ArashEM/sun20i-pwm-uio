@@ -9,10 +9,16 @@
  *
  */
 #include <errno.h>
+#include <unistd.h>
+#include <stdio.h>
+#include "soc.h"
 #include "config.h"
 
 int32_t pwm_calc(uint64_t period_ns, uint8_t duty_cycle, struct pwm_config *config)
 {
+    (void)period_ns;
+    (void)duty_cycle;
+    (void)config;
     return 0;
 }
 
@@ -146,8 +152,6 @@ int32_t set_cap_config(void *p, uint8_t ch, const struct cap_config *config)
 
 int32_t cap_blocking(void *p, uint8_t ch, struct cap_result_raw *result)
 {
-    int32_t ret;
-
     if(!result)
         return -EFAULT;
 
@@ -167,6 +171,34 @@ int32_t cap_blocking(void *p, uint8_t ch, struct cap_result_raw *result)
         }
         usleep(1000*100);
     }
+
+    return 0;
+}
+
+int32_t result_to_ns(void *p, uint8_t ch, 
+                     const struct cap_result_raw *raw,
+                     struct cap_result *result)
+{
+    if(!raw || !result)
+        return -EFAULT;
+
+    int32_t ret;
+    struct pwm_clk clk;
+    ret = get_clk_config(p, ch, &clk);
+    if(ret)
+        return ret;
+
+    uint8_t pre;
+    ret = get_prescaler(p, ch, &pre);
+    if(ret)
+        return ret;
+
+    uint32_t clk_freq = (clk.src == APB0 ? APB0_FREQ : HOSC_FREQ);
+    uint16_t divider = ( 1 << clk.div );
+    uint64_t factor = ( NSEC_IN_SEC / clk_freq ) * (1 + pre) * divider;
+
+    result->on_ns = raw->on_cycles * factor;
+    result->off_ns = raw->off_cycles * factor;
 
     return 0;
 }

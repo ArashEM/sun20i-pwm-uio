@@ -12,8 +12,11 @@
  */
 #include <stdint.h>
 
-#define HOSC_FREQ       24000000        // Main clock frequency (Hz)
-#define APB0_FREQ       100000000       // APB0 bus clock frequency (Hz)
+#define HOSC_FREQ       24000000UL      // Main clock frequency (Hz)
+#define APB0_FREQ       100000000UL     // APB0 bus clock frequency (Hz)
+
+#define NSEC_IN_SEC     1000000000UL    // nS in S
+#define MSEC_IN_NSEC    1000UL          // uS in S
 
 #define PWM_CHANNEL     0x08
 

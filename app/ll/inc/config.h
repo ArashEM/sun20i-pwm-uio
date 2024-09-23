@@ -51,6 +51,16 @@ struct cap_result_raw
 };
 
 /**
+ * @brief Capture result in nano seconds
+ * 
+ */
+struct cap_result 
+{
+    uint64_t on_ns;
+    uint64_t off_ns;
+};
+
+/**
  * @brief Fill config feild in order to generate PWM pulse
  *        based on required period and duty cycle
  *
@@ -110,5 +120,18 @@ int32_t set_cap_config(void *p, uint8_t ch, const struct cap_config *config);
  * @return int32_t 0 on success
  */
 int32_t cap_blocking(void *p, uint8_t ch, struct cap_result_raw *result);
+
+/**
+ * @brief Convert capture raw results into nS
+ * 
+ * @param p Pointer to PWM base address
+ * @param ch PWM channel (0 to 7)  
+ * @param raw Raw results in number of cycles
+ * @param result Results in nS
+ * @return int32_t 0 on success
+ */
+int32_t result_to_ns(void *p, uint8_t ch, 
+                     const struct cap_result_raw *raw,
+                     struct cap_result *result);
 
 #endif // CONFIG_H

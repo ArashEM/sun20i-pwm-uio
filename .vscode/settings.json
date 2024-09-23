@@ -5,6 +5,7 @@
         "device.h": "c",
         "unistd.h": "c",
         "clk.h": "c",
-        "bitops.h": "c"
+        "bitops.h": "c",
+        "config.h": "c"
     }
 }
