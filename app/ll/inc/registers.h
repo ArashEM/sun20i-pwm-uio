@@ -90,4 +90,7 @@ do {                                \
 #define CRLR(x)                 ( (x) & 0xFFFF )
 #define CFLR(x)                 ( (x) & 0xFFFF )
 
+// PWM Pulse Counter Register
+#define PPCNTR(x)               ( (x) & 0xFFFF )
+
 #endif // REGISTERS_H

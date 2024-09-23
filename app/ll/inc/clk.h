@@ -21,7 +21,7 @@
  */
 enum clk_src {
     HOSC = 0,       // 24Mhz crystal oscillator
-    APB0 = 1        // 100Mhz APBO bus clock
+    APB0 = 1        // 100Mhz APB0 bus clock
 };
 
 /**

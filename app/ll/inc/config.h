@@ -61,6 +61,34 @@ struct cap_result
 };
 
 /**
+ * @brief Absolute minium and maximum period of PWM output
+ * 
+ * @param max_ns Maximum period in nS
+ * @param min_ns Minium period in nS
+ * @return int32_t 0 on success
+ */
+int32_t pwm_min_max_period(uint64_t *max_ns, uint64_t *min_ns);
+
+/**
+ * @brief PWM pulse counter clock period (which increment PPCNTR)
+ * 
+ * @param config Pointer to PWM configuration
+ * @param period_ns Clock period in nS
+ * @return int32_t 0 on success
+ */
+int32_t pwm_clk_period(const struct pwm_config *config, uint64_t *period_ns);
+
+/**
+ * @brief Report PWM output frequency
+ * 
+ * @param p Pointer to PWM base address
+ * @param ch PWM channel (0 to 7) 
+ * @param freq_hz PWM frequency in Hertz 
+ * @return int32_t 0 on success
+ */
+int32_t get_pwm_freq(void *p, uint8_t ch, uint64_t *freq_hz);
+
+/**
  * @brief Fill config feild in order to generate PWM pulse
  *        based on required period and duty cycle
  *
@@ -133,5 +161,16 @@ int32_t cap_blocking(void *p, uint8_t ch, struct cap_result_raw *result);
 int32_t result_to_ns(void *p, uint8_t ch, 
                      const struct cap_result_raw *raw,
                      struct cap_result *result);
+
+/**
+ * @brief Report maximum duration capture can record based 
+ *        on it'c clock configuration
+ * 
+ * @param p Pointer to PWM base address
+ * @param ch PWM channel (0 to 7) 
+ * @param max_ns Maximum On/Off duration capture can measure in nS
+ * @return int32_t 
+ */
+int32_t cap_max_duration(void *p, uint8_t ch, uint64_t *max_ns);
 
 #endif // CONFIG_H

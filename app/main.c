@@ -15,23 +15,30 @@ int main() {
 
     // PWM channel
     struct pwm_config pwm = {
-        .clk = {.src = APB0, .div = DIV_8},
-        .period = {.entire = 1250 - 1, .act = 500 },
-        .pre = 9,
+        .clk = {.src = APB0, .div = DIV_1},
+        .period = {.entire = 100 - 1, .act = 70 },
+        .pre = 19,
         .state = ACT_HIGH,
         .en = true,
     };
     set_pwm_config(p, 2, &pwm);
+    uint64_t freq;
+    get_pwm_freq(p, 2, &freq);
+    printf("freq: %lld Hz\n", freq);
 
 
     // Capture channel
     struct cap_config cap = {
-        .clk = {.src = HOSC, .div = DIV_1},
-        .pre = 23,
+        .clk = {.src = APB0, .div = DIV_1},
+        .pre = 4,
         .falling = true,
         .rising = true,
     };
     set_cap_config(p, 4, &cap);
+
+    uint64_t max_cap;
+    cap_max_duration(p, 4, &max_cap);
+    printf("max: %lld uS\n", max_cap/1000UL);
 
     for(size_t i = 0; i < 5; ++i) {
         struct cap_result_raw raw;
@@ -43,10 +50,8 @@ int main() {
         sleep(1);
     }
 
-    cap_en(p, 2, false, false);
-    cap_en(p, 5, false, false);
-    pwm_en(p, 3, false);
-    pwm_en(p, 4, false);
+    cap_en(p, 4, false, false);
+    pwm_en(p, 2, false);
 
     munmap(p, 4096);
     close(fd);

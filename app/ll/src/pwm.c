@@ -56,7 +56,8 @@
     if(!en) {
         bool cur;
         is_pwm_en(base, ch, &cur);
-        while(cur & readl(base + PWM_REG_OFFSET(PPCNTR_OFFSET, ch)));
+        uint32_t reg = readl(base + PWM_REG_OFFSET(PPCNTR_OFFSET, ch));
+        while(cur & PPCNTR(reg));
     }
 
     rmwb(base + PER_OFFSET, PWMx_EN(ch), en);

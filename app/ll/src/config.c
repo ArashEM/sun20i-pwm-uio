@@ -14,6 +14,50 @@
 #include "soc.h"
 #include "config.h"
 
+int32_t pwm_min_max_period(uint64_t *max_ns, uint64_t *min_ns)
+{
+    if(!max_ns | !min_ns)
+        return -EFAULT;
+
+    return 0;
+}
+
+int32_t pwm_clk_period(const struct pwm_config *config, uint64_t *period_ns)
+{
+    if(!config | !period_ns)
+        return -EFAULT;
+
+    if(check_clk(config->clk))
+        return -EINVAL;
+
+    uint32_t clk_freq = (config->clk.src == APB0 ? APB0_FREQ : HOSC_FREQ);
+    uint16_t divider = ( 1 << config->clk.div );
+    *period_ns = ( NSEC_IN_SEC / clk_freq ) * (1 + config->pre) * divider;
+    
+    return 0;
+}
+
+int32_t get_pwm_freq(void *p, uint8_t ch, uint64_t *freq_hz)
+{
+    if(!freq_hz)
+        return -EFAULT;
+
+    int32_t ret;
+    struct pwm_config config;
+    ret = get_pwm_config(p, ch, &config);
+    if(ret)
+        return ret;
+
+    uint64_t period_ns;
+    ret = pwm_clk_period(&config, &period_ns);
+    if(ret)
+        return ret;
+
+    *freq_hz = NSEC_IN_SEC / (period_ns * (config.period.entire + 1));
+
+    return 0;
+}
+
 int32_t pwm_calc(uint64_t period_ns, uint8_t duty_cycle, struct pwm_config *config)
 {
     (void)period_ns;
@@ -37,7 +81,15 @@ int32_t get_pwm_config(void *p, uint8_t ch, struct pwm_config *config)
     if(ret)
         return ret;
 
-    // ToDo: clk, pre-scaler and act_state must be implemented
+    ret = get_clk_config(p, ch, &config->clk);
+    if(ret)
+        return ret;
+
+    ret = get_prescaler(p, ch, &config->pre);
+    if(ret)
+        return ret;
+
+    // ToDo: act_state must be implemented
     return 0;
 }
 
@@ -183,22 +235,31 @@ int32_t result_to_ns(void *p, uint8_t ch,
         return -EFAULT;
 
     int32_t ret;
-    struct pwm_clk clk;
-    ret = get_clk_config(p, ch, &clk);
+    struct pwm_config config;
+    ret = get_pwm_config(p, ch, &config);
     if(ret)
         return ret;
 
-    uint8_t pre;
-    ret = get_prescaler(p, ch, &pre);
+    // how long each cycle is?
+    uint64_t clk_period;
+    ret = pwm_clk_period(&config, &clk_period);
+
+    result->on_ns = raw->on_cycles * clk_period;
+    result->off_ns = raw->off_cycles * clk_period;
+
+    return 0;
+}
+
+int32_t cap_max_duration(void *p, uint8_t ch, uint64_t *max_ns)
+{
+    struct cap_result_raw raw = {.on_cycles = 65535 };
+    struct cap_result res;
+
+    int32_t ret = result_to_ns(p, ch, &raw, &res);
     if(ret)
         return ret;
 
-    uint32_t clk_freq = (clk.src == APB0 ? APB0_FREQ : HOSC_FREQ);
-    uint16_t divider = ( 1 << clk.div );
-    uint64_t factor = ( NSEC_IN_SEC / clk_freq ) * (1 + pre) * divider;
-
-    result->on_ns = raw->on_cycles * factor;
-    result->off_ns = raw->off_cycles * factor;
+    *max_ns = res.on_ns;
 
     return 0;
 }
