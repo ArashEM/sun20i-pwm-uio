@@ -7,6 +7,7 @@ add_executable(${TARGET_NAME} main.c)
 
 add_subdirectory(ll)
 add_subdirectory(uio)
+add_subdirectory(pid)
 
-target_link_libraries(${TARGET_NAME} PRIVATE ll uio)
+target_link_libraries(${TARGET_NAME} PRIVATE ll uio pid)
 target_compile_options(${TARGET_NAME} PRIVATE -Wall -Wextra)
