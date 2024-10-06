@@ -8,6 +8,7 @@ This repository includes `uio` driver for `T113-S3 PWM` peripheral.
    Shared library for interfacing with `PWM` peripheral. 
 - `app`: user space application  
    User space application which implement simple use case of library APIs.
+- `udev`: Simple udev rule to create `/dev/uio0` device node with proper access. This way you don't need `root` access to use `uio` device.
 
 # Links
 1. [UIO howto](https://www.kernel.org/doc/html/v4.14/driver-api/uio-howto.html)

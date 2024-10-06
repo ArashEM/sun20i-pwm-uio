@@ -1,0 +1,1 @@
+KERNEL=="uio0" , NAME="uio/%n" , GROUP="pwm" , MODE="0660"
